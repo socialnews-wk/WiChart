@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>위키트리 데이터 시각화 도구</title>
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+  .app-wrap { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .panel {
+    width: 800px; max-width: 100%; flex: 0 1 800px; background: var(--bg-100, #fff);
+    border: 1px solid var(--border-200, #e5e5e5); border-radius: 12px;
+    padding: 16px; max-height: 820px; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .panel-header { flex: 0 0 auto; margin-bottom: 10px; }
+  .panel-title { font-size: 18px; font-weight: 800; margin: 0 0 8px; color: var(--text-100,#1a1a1a); }
+  .guide-toggle {
+    display: inline-flex; align-items: center; gap: 5px; background: var(--bg-200,#f0f0f0); color: var(--text-100,#1a1a1a);
+    border: none; border-radius: 7px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .guide-toggle .chev { display: inline-block; transition: transform .15s; font-size: 10px; }
+  .guide-toggle.open .chev { transform: rotate(180deg); }
+  .guide-box {
+    margin-top: 8px; padding: 10px 14px; background: var(--bg-200,#f7f7f7); border: 1px solid var(--border-200,#e5e5e5);
+    border-radius: 8px; font-size: 12px; line-height: 1.65; color: var(--text-200,#444);
+  }
+  .guide-box.hidden { display: none; }
+  .guide-box ol { margin: 0; padding-left: 18px; }
+  .guide-box li { margin-bottom: 4px; }
+  .guide-box li:last-child { margin-bottom: 0; }
+  .panel-scroll { flex: 1 1 auto; }
+  .panel h3 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: var(--text-100,#1a1a1a); }
+  .panel h3:first-child { margin-top: 0; }
+  .panel label { display: block; font-size: 11px; color: var(--text-400,#888); margin-bottom: 3px; margin-top: 8px; }
+  .panel input[type=text], .panel textarea {
+    padding: 6px 8px; font-size: 13px; border: 1px solid var(--border-200,#ddd);
+    border-radius: 6px; background: var(--bg-000,#fff); color: var(--text-100,#1a1a1a);
+  }
+  .panel input[type=text] { width: 100%; }
+  .panel textarea { width: 100%; resize: vertical; min-height: 50px; font-size: 11px; }
+  .row-item, .row-header { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; flex-wrap: nowrap; }
+  .row-item input[type=text] { padding: 5px 6px; font-size: 12px; }
+  .row-item .wk { width: 78px; flex: 0 0 78px; }
+  .row-item .vv { width: 56px; flex: 0 0 56px; }
+  .row-del-spacer { width: 30px; flex: 0 0 30px; }
+  .row-header { font-size: 11px; font-weight: 700; color: var(--text-400,#888); margin-bottom: 6px; }
+  .row-header .wk-h { width: 78px; flex: 0 0 78px; }
+  .row-header .v-h { width: 56px; flex: 0 0 56px; overflow: visible; white-space: normal; line-height: 1.15; word-break: break-word; }
+  .series-item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px; margin-bottom: 8px;
+    border: 1px solid var(--border-200,#eee); border-radius: 8px; position: relative; }
+  .series-item .slabel { width: 160px; flex: 0 0 160px; padding: 5px 6px; font-size: 12px; }
+  .ctrl-cluster { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .color-swatch-wrap { position: relative; }
+  .color-trigger { width: 40px; height: 30px; flex: 0 0 40px; border: 1px solid var(--border-200,#ccc); border-radius: 6px; cursor: pointer; padding: 0; }
+  .color-popover { display: none; position: absolute; top: 36px; left: 0; z-index: 30; background: var(--bg-000,#fff);
+    border: 1px solid var(--border-200,#ddd); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 10px; width: 232px; }
+  .color-popover.open { display: block; }
+  .popover-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+  .ptab { flex: 1; border: none; background: var(--bg-200,#f0f0f0); color: var(--text-100,#1a1a1a); padding: 6px 0;
+    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .ptab.active { background: #171717; color: #fff; }
+  .ptab-panel.hidden { display: none; }
+  .ptab-panel .palette { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ptab-panel[data-panel="custom"] { display: flex; flex-direction: column; gap: 4px; }
+  .ptab-panel[data-panel="custom"].hidden { display: none; }
+  .sv-canvas { width: 100%; height: 130px; border-radius: 8px; cursor: crosshair; display: block; touch-action: none; }
+  .hue-range {
+    width: 100%; margin-top: 10px; -webkit-appearance: none; appearance: none;
+    height: 14px; border-radius: 7px; outline: none; touch-action: none;
+    background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  }
+  .hue-range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; border: 2px solid #171717; cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+  }
+  .hue-range::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid #171717; cursor: pointer;
+  }
+  .hex-row { display: flex; align-items: center; gap: 4px; margin-top: 10px; }
+  .hex-hash { font-size: 13px; color: var(--text-400,#888); font-weight: 700; }
+  .hex-input { flex: 1; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border-200,#ccc);
+    border-radius: 6px; text-transform: uppercase; background: var(--bg-000,#fff); color: var(--text-100,#1a1a1a); }
+  .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .swatch.active { border-color: var(--text-100,#171717); box-shadow: 0 0 0 1px var(--bg-100,#fff) inset; }
+  .sqbtn { width: 30px; height: 30px; flex: 0 0 30px; border: none; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; line-height: 1; padding: 0; }
+  .sqbtn.move-up { background: #dcf3e3; color: #1b7a3d; }
+  .sqbtn.move-down { background: #dde8fb; color: #1a56b0; }
+  .sqbtn.move:disabled { opacity: 0.35; cursor: not-allowed; }
+  .sqbtn.danger { background: #fdeaea; color: #c0392b; }
+  .addrow-btn {
+    padding: 8px 14px; margin-top: 8px; margin-right: 8px; border: none; border-radius: 7px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .addrow-btn { background: var(--bg-200,#f0f0f0); color: var(--text-100,#1a1a1a); }
+  .addrow-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .addrow-btn.flip { background: transparent; border: 1.5px dashed var(--border-200,#bbb); }
+  .panel-actions {
+    position: sticky; bottom: -16px; margin: 14px -16px -16px -16px; padding: 12px 16px 16px;
+    background: var(--bg-100,#fff); border-top: 1px solid var(--border-200,#e5e5e5); z-index: 20;
+  }
+  .dl-btn { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: block; width: 100%; padding: 11px 14px; }
+  .dl-hint { font-size: 11px; color: var(--text-400,#888); margin-top: 6px; text-align: center; }
+  .canvas-wrap { flex: 1 1 560px; min-width: 320px; }
+  .canvas-wrap canvas { width: 100%; height: auto; display: block; border-radius: 10px; }
+  .chk-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .chk-row label { margin: 0; font-size: 12px; color: var(--text-100,#1a1a1a); }
+  /* --- segmented toggle buttons: clearly distinguish selected vs unselected --- */
+  .seg { display: inline-flex; border: 1px solid var(--border-200,#ddd); border-radius: 8px; overflow: hidden; margin-top: 6px; }
+  .seg button {
+    border: none; border-right: 1px solid var(--border-200,#ddd);
+    background: var(--bg-200,#eef0f2); color: var(--text-400,#9a9a9a);
+    padding: 7px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button:hover { color: var(--text-100,#1a1a1a); }
+  #chartTypeSeg button.active {
+    background: #FACD2E; color: #171717; font-weight: 800;
+    box-shadow: inset 0 0 0 2px #171717;
+  }
+  #modeSeg button[data-mode="dark"].active {
+    background: #171717; color: #FACD2E; font-weight: 800;
+    box-shadow: inset 0 0 0 2px #FACD2E;
+  }
+  #modeSeg button[data-mode="light"].active {
+    background: #F7F7F5; color: #171717; font-weight: 800;
+    box-shadow: inset 0 0 0 2px #171717;
+  }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+</style>
+</head>
+<body>
+<h2 class="sr-only">위키트리 데이터 시각화 도구. 국정수행 평가 스타일의 편집 가능한 여론조사 차트 생성기입니다. 패널 상단에는 도구 이름과, 눌러서 펼치고 접을 수 있는 사용법 안내 상자가 있습니다. 숫자를 12,345처럼 쉼표(천 단위 구분 기호)를 넣어 입력해도 실제 값(12345)으로 정확히 계산되고, 차트에 표시되는 숫자와 세로축 눈금에도 천 단위 구분 쉼표가 그대로 표시됩니다. 값이 정수일 때는 소수점 이하 .0이 표시되지 않고, 소수점이 있는 값일 때만 소수 첫째 자리까지 표시됩니다. 라벨(숫자) 숨기기 체크박스로 데이터 값 라벨을 켜고 끌 수 있고, 가로축 항목 이름은 입력한 경우에만 자동으로 표시됩니다. 범례 전체를 숨기는 체크박스도 별도로 있습니다. 결과물은 PNG로 저장할 수 있으며, 저장 버튼은 패널 하단에 항상 고정되어 있습니다. 내용 입력칸의 줄바꿈(Enter, Shift+Enter)이 결과물에도 정확히 그대로 반영됩니다. 범례 이름과 축 라벨을 비워두면 실제 결과물에는 아무 글자도 표시되지 않고, 입력했을 때만 해당 텍스트가 나타납니다. 라이트 모드에서는 강조 텍스트와 구분선, 워터마크 대체 텍스트가 밝은 배경에서도 잘 보이도록 다크골드 계열 색상을 사용하고, 다크 모드에서는 밝은 골드를 그대로 사용합니다. 데이터 입력 영역에서는 Tab 키를 누르면 좌우가 아니라 같은 열을 따라 위에서 아래로 이동합니다. 색상 피커는 팔레트 탭과, 채도/명도 캔버스 및 색조 슬라이더로 구성된 직접 선택 탭을 제공합니다. 선택된 차트 종류와 모드가 색상으로 뚜렷하게 구분되며, 제목/강조/부제가 비어 있을 때 상단 여백이 자동으로 줄어듭니다. 선형/막대/파이 차트 종류, 다크/라이트 모드, 계열 순서 변경과 축 뒤집기, 최대 10개 계열, 데이터 입력, 내용 및 워터마크 설정을 지원하며 오른쪽에 실시간으로 그래프가 그려집니다.</h2>
+<div class="app-wrap" id="app">
+  <div class="panel">
+    <div class="panel-header">
+      <h1 class="panel-title">위키트리 데이터 시각화 도구</h1>
+      <button class="guide-toggle" id="guideToggle" type="button">
+        <span class="label">사용법 보기</span><span class="chev">▾</span>
+      </button>
+      <div class="guide-box hidden" id="guideBox">
+        <ol>
+          <li>위에서 <strong>차트 종류</strong>(선/막대/파이)와 <strong>모드</strong>(다크/라이트)를 선택하세요.</li>
+          <li><strong>범례/색상</strong>에서 계열 이름과 색상을 정하고, <strong>데이터</strong>에서 값을 입력하세요. 숫자는 1,234처럼 쉼표를 넣어도 그대로 인식돼요.</li>
+          <li>필요하면 <strong>제목·내용·워터마크</strong>를 채워 넣으세요. 비워두면 결과물에는 표시되지 않아요.</li>
+          <li>완성되면 아래의 <strong>PNG로 저장</strong> 버튼을 눌러 다운로드하세요.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="panel-scroll">
+      <h3>차트 종류</h3>
+      <div class="seg" id="chartTypeSeg">
+        <button data-type="line" class="active">선</button>
+        <button data-type="bar">막대</button>
+        <button data-type="pie">파이</button>
+      </div>
+      <h3>모드</h3>
+      <div class="seg" id="modeSeg">
+        <button data-mode="dark" class="active">다크</button>
+        <button data-mode="light">라이트</button>
+      </div>
+      <h3>제목</h3>
+      <label>제목</label>
+      <input type="text" id="title" value="" placeholder="제목을 입력하세요">
+      <label>강조 텍스트</label>
+      <input type="text" id="highlight" value="" placeholder="강조할 텍스트를 입력하세요">
+      <label>부제</label>
+      <input type="text" id="subtitle" value="" placeholder="부제를 입력하세요">
+      <h3>범례 / 색상 (최대 10개)</h3>
+      <div class="chk-row">
+        <input type="checkbox" id="hideLegend">
+        <label for="hideLegend">범례 숨기기</label>
+      </div>
+      <div id="seriesList"></div>
+      <button class="addrow-btn" id="addSeries">+ 계열 추가</button>
+      <h3>데이터</h3>
+      <div class="chk-row">
+        <input type="checkbox" id="hideValueLabels">
+        <label for="hideValueLabels">라벨 숨기기</label>
+      </div>
+      <div id="rowsHeader" class="row-header"></div>
+      <div id="rows"></div>
+      <button class="addrow-btn" id="addRow">+ 행 추가</button>
+      <button class="addrow-btn flip" id="flipAxis">⇄ 축 뒤집기</button>
+      <h3>내용</h3>
+      <textarea id="footer" placeholder="내용을 입력하세요 (Shift+Enter로 줄바꿈)"></textarea>
+      <div class="chk-row">
+        <input type="checkbox" id="useLogo" checked>
+        <label for="useLogo">워터마크</label>
+      </div>
+      <label>대체 텍스트 워터마크 (로고 미사용 시)</label>
+      <input type="text" id="brand" value="">
+    </div>
+    <div class="panel-actions">
+      <button class="dl-btn" id="downloadBtn">PNG로 저장</button>
+      <div class="dl-hint" id="dlHint"></div>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="cv" width="1680" height="945"></canvas>
+  </div>
+</div>
+<script>
+(function(){
+  const MAX_SERIES = 10;
+  const PALETTE = ['#FACD2E','#2979ff','#ff3b30','#34c759','#af52de','#ff9500','#00c7be','#ff2d92','#5ac8fa','#a2845e','#E6D37A','#171717','#9A9A9A','#2A2E35','#F7F7F5'];
+  const ACCENT = '#FACD2E';
+  const THEME = {
+    dark:  { bg:'#171717', text:'#F7F7F5', sub:'#cfcfcf', grid:'#33333a', axisText:'#9A9A9A', baseline:'#5a5a5a', footer:'#9A9A9A', dot:'#171717', logo:'#FACD2E', accent:'#FACD2E' },
+    light: { bg:'#F7F7F5', text:'#171717', sub:'#3a3a3a', grid:'#dcdcd6', axisText:'#6b6b6b', baseline:'#b5b5b0', footer:'#5a5a5a', dot:'#F7F7F5', logo:'#171717', accent:'#B8860B' }
+  };
+  let mode = 'dark';
+  let chartType = 'line';
+  let series = [
+    { label: '', color: PALETTE[0] }
+  ];
+  const rowsData = [
+    { wk: '', vals: [''] },
+    { wk: '', vals: [''] },
+  ];
+  function esc(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
+  function isBlank(v){ return v === '' || v === null || v === undefined; }
+  // Comma is treated as a thousands separator, not a decimal point — strip
+  // it before parsing so "12,345" is read as 12345, not truncated at "12".
+  function numVal(v){
+    const cleaned = String(v).replace(/,/g, '').trim();
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? 0 : n;
+  }
+  // Re-adds thousands-separator commas for display. Whole numbers show no
+  // decimal (e.g. 1234 -> "1,234"); only genuinely fractional values show
+  // one decimal place (e.g. 1234.5 -> "1,234.5").
+  function formatNum(v){
+    let rounded = Math.round(v * 10) / 10;
+    if (Object.is(rounded, -0)) rounded = 0;
+    const isWhole = Math.abs(rounded - Math.round(rounded)) < 1e-9;
+    return rounded.toLocaleString('en-US', {
+      minimumFractionDigits: isWhole ? 0 : 1,
+      maximumFractionDigits: 1
+    });
+  }
+  function formatAxisLabel(g, step){
+    if (Math.abs(g) < step/1000) return '0';
+    if (Number.isInteger(g)) return g.toLocaleString('en-US');
+    return g.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  }
+  // ---- color helpers ----
+  function hexToRgb(hex){
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+    const n = parseInt(hex,16);
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  }
+  function rgbToHex(r,g,b){
+    return '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+  }
+  function rgbToHsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h=0,s=0,l=(max+min)/2;
+    const d = max-min;
+    if (d !== 0){
+      s = d / (1 - Math.abs(2*l-1));
+      switch(max){
+        case r: h = ((g-b)/d) % 6; break;
+        case g: h = (b-r)/d + 2; break;
+        case b: h = (r-g)/d + 4; break;
+      }
+      h *= 60; if (h<0) h+=360;
+    }
+    return { h, s:s*100, l:l*100 };
+  }
+  function hslToRgb(h,s,l){
+    s/=100; l/=100;
+    const c = (1-Math.abs(2*l-1))*s;
+    const x = c*(1-Math.abs((h/60)%2-1));
+    const m = l - c/2;
+    let r=0,g=0,b=0;
+    if (h<60){r=c;g=x;b=0;} else if(h<120){r=x;g=c;b=0;} else if(h<180){r=0;g=c;b=x;}
+    else if(h<240){r=0;g=x;b=c;} else if(h<300){r=x;g=0;b=c;} else {r=c;g=0;b=x;}
+    return { r:(r+m)*255, g:(g+m)*255, b:(b+m)*255 };
+  }
+  function adjustForMode(hex, m){
+    try {
+      const { r, g, b } = hexToRgb(hex);
+      let { h, s, l } = rgbToHsl(r, g, b);
+      if (m === 'dark') { s = Math.min(100, s*0.9); l = Math.min(92, l*1.08); }
+      else { s = Math.min(100, s*1.12); l = Math.max(8, l*0.9); }
+      const rgb = hslToRgb(h, s, l);
+      return rgbToHex(rgb.r, rgb.g, rgb.b);
+    } catch(e){ return hex; }
+  }
+  // HSV helpers (for the custom color-picker canvas + hue slider)
+  function rgbToHsv(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h=0; const d=max-min;
+    if (d !== 0){
+      switch(max){
+        case r: h=((g-b)/d)%6; break;
+        case g: h=(b-r)/d+2; break;
+        case b: h=(r-g)/d+4; break;
+      }
+      h*=60; if (h<0) h+=360;
+    }
+    const s = max===0 ? 0 : d/max;
+    const v = max;
+    return { h, s:s*100, v:v*100 };
+  }
+  function hexToHsv(hex){ const { r, g, b } = hexToRgb(hex); return rgbToHsv(r,g,b); }
+  function hsvToRgb(h,s,v){
+    s/=100; v/=100;
+    const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+    let r=0,g=0,b=0;
+    if (h<60){r=c;g=x;b=0;} else if(h<120){r=x;g=c;b=0;} else if(h<180){r=0;g=c;b=x;}
+    else if(h<240){r=0;g=x;b=c;} else if(h<300){r=x;g=0;b=c;} else {r=c;g=0;b=x;}
+    return { r:(r+m)*255, g:(g+m)*255, b:(b+m)*255 };
+  }
+  function hsvToHex(h,s,v){ const rgb = hsvToRgb(h,s,v); return rgbToHex(rgb.r, rgb.g, rgb.b); }
+  function drawSVCanvas(canvas, h, s, v){
+    if (!canvas) return;
+    const c2 = canvas.getContext('2d');
+    const w = canvas.width, ht = canvas.height;
+    const base = hsvToRgb(h, 100, 100);
+    c2.fillStyle = `rgb(${Math.round(base.r)},${Math.round(base.g)},${Math.round(base.b)})`;
+    c2.fillRect(0, 0, w, ht);
+    let g1 = c2.createLinearGradient(0, 0, w, 0);
+    g1.addColorStop(0, 'rgba(255,255,255,1)'); g1.addColorStop(1, 'rgba(255,255,255,0)');
+    c2.fillStyle = g1; c2.fillRect(0, 0, w, ht);
+    let g2 = c2.createLinearGradient(0, 0, 0, ht);
+    g2.addColorStop(0, 'rgba(0,0,0,0)'); g2.addColorStop(1, 'rgba(0,0,0,1)');
+    c2.fillStyle = g2; c2.fillRect(0, 0, w, ht);
+    const cx = (s/100)*w, cy = (1 - v/100)*ht;
+    c2.beginPath(); c2.arc(cx, cy, 7, 0, Math.PI*2);
+    c2.strokeStyle = 'rgba(0,0,0,0.55)'; c2.lineWidth = 2; c2.stroke();
+    c2.beginPath(); c2.arc(cx, cy, 7, 0, Math.PI*2);
+    c2.strokeStyle = '#fff'; c2.lineWidth = 1.3; c2.stroke();
+  }
+  // ---- controls: series ----
+  const seriesListEl = document.getElementById('seriesList');
+  let hueCache = {};
+  function currentHue(i){
+    if (hueCache[i] !== undefined) return hueCache[i];
+    return hexToHsv(series[i].color).h;
+  }
+  function closeAllPopovers(){
+    seriesListEl.querySelectorAll('.color-popover.open').forEach(p => p.classList.remove('open'));
+  }
+  function refreshCustomPanel(i){
+    const item = seriesListEl.children[i];
+    if (!item) return;
+    const canvas = item.querySelector('.sv-canvas');
+    const hueRange = item.querySelector('.hue-range');
+    const hexInput = item.querySelector('.hex-input');
+    if (!canvas || !hueRange || !hexInput) return;
+    const h = currentHue(i);
+    const hsv = hexToHsv(series[i].color);
+    hueRange.value = Math.round(h);
+    if (document.activeElement !== hexInput) hexInput.value = series[i].color.replace('#','').toUpperCase();
+    drawSVCanvas(canvas, h, hsv.s, hsv.v);
+  }
+  function applySeriesColor(i, hex){
+    series[i].color = hex;
+    const item = seriesListEl.children[i];
+    if (!item) return;
+    const trigger = item.querySelector('.color-trigger');
+    if (trigger) { trigger.style.background = hex; trigger.title = hex; }
+    item.querySelectorAll('.swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.color.toLowerCase() === hex.toLowerCase());
+    });
+  }
+  function renderSeriesList(){
+    hueCache = {};
+    seriesListEl.innerHTML = '';
+    series.forEach((s,i) => {
+      const div = document.createElement('div');
+      div.className = 'series-item';
+      const swatches = PALETTE.map(c => {
+        const active = c.toLowerCase() === s.color.toLowerCase() ? ' active' : '';
+        return `<button class="swatch${active}" data-i="${i}" data-color="${c}" style="background:${c}" title="${c}"></button>`;
+      }).join('');
+      div.innerHTML = `
+        <input type="text" class="slabel" data-i="${i}" value="${esc(s.label)}" placeholder="계열 ${i+1}">
+        <div class="ctrl-cluster">
+          <div class="color-swatch-wrap">
+            <button class="color-trigger" data-i="${i}" style="background:${s.color}" title="${s.color}"></button>
+            <div class="color-popover" data-i="${i}">
+              <div class="popover-tabs">
+                <button class="ptab active" data-i="${i}" data-tab="palette">팔레트</button>
+                <button class="ptab" data-i="${i}" data-tab="custom">직접 선택</button>
+              </div>
+              <div class="ptab-panel" data-i="${i}" data-panel="palette">
+                <div class="palette">${swatches}</div>
+              </div>
+              <div class="ptab-panel hidden" data-i="${i}" data-panel="custom">
+                <canvas class="sv-canvas" data-i="${i}" width="212" height="130"></canvas>
+                <input type="range" class="hue-range" data-i="${i}" min="0" max="360" step="1" value="0">
+                <div class="hex-row">
+                  <span class="hex-hash">#</span>
+                  <input type="text" class="hex-input" data-i="${i}" maxlength="6" value="${s.color.replace('#','').toUpperCase()}">
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="sqbtn move-up" data-i="${i}" title="위로 이동" ${i===0?'disabled':''}>▲</button>
+          <button class="sqbtn move-down" data-i="${i}" title="아래로 이동" ${i===series.length-1?'disabled':''}>▼</button>
+          ${series.length>1 ? `<button class="sqbtn danger del-series" data-i="${i}" title="이 계열 삭제">×</button>` : ''}
+        </div>
+      `;
+      seriesListEl.appendChild(div);
+    });
+    document.getElementById('addSeries').disabled = series.length >= MAX_SERIES;
+    series.forEach((s,i) => refreshCustomPanel(i));
+  }
+  function moveSeries(i, dir){
+    const j = i + dir;
+    if (j < 0 || j >= series.length) return;
+    [series[i], series[j]] = [series[j], series[i]];
+    rowsData.forEach(r => { const t = r.vals[i]; r.vals[i] = r.vals[j]; r.vals[j] = t; });
+    renderSeriesList(); renderRowsHeader(); renderRows(); draw();
+  }
+  seriesListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const i = +btn.dataset.i;
+    if (btn.classList.contains('color-trigger')) {
+      const pop = seriesListEl.querySelector(`.color-popover[data-i="${i}"]`);
+      const wasOpen = pop.classList.contains('open');
+      closeAllPopovers();
+      if (!wasOpen) { pop.classList.add('open'); refreshCustomPanel(i); }
+      return;
+    }
+    if (btn.classList.contains('ptab')) {
+      const pop = btn.closest('.color-popover');
+      pop.querySelectorAll('.ptab').forEach(b => b.classList.toggle('active', b === btn));
+      pop.querySelectorAll('.ptab-panel').forEach(p => p.classList.toggle('hidden', p.dataset.panel !== btn.dataset.tab));
+      if (btn.dataset.tab === 'custom') refreshCustomPanel(i);
+      return;
+    }
+    if (btn.classList.contains('swatch')) {
+      applySeriesColor(i, btn.dataset.color);
+      hueCache[i] = hexToHsv(btn.dataset.color).h;
+      refreshCustomPanel(i);
+      renderRowsHeader(); draw();
+      return;
+    }
+    if (btn.classList.contains('move-up')) { moveSeries(i, -1); return; }
+    if (btn.classList.contains('move-down')) { moveSeries(i, 1); return; }
+    if (btn.classList.contains('del-series')) {
+      series.splice(i, 1);
+      rowsData.forEach(r => r.vals.splice(i, 1));
+      renderSeriesList(); renderRowsHeader(); renderRows(); draw();
+      return;
+    }
+  });
+  seriesListEl.addEventListener('pointerdown', (e) => {
+    const canvas = e.target.closest('.sv-canvas');
+    if (!canvas) return;
+    e.preventDefault();
+    const i = +canvas.dataset.i;
+    const rect = canvas.getBoundingClientRect();
+    function updateFromEvent(ev){
+      let x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+      x = Math.max(0, Math.min(rect.width, x));
+      y = Math.max(0, Math.min(rect.height, y));
+      const s = rect.width ? (x / rect.width) * 100 : 0;
+      const v = rect.height ? (1 - y / rect.height) * 100 : 0;
+      const h = currentHue(i);
+      const hex = hsvToHex(h, s, v);
+      applySeriesColor(i, hex);
+      drawSVCanvas(canvas, h, s, v);
+      const hexInput = canvas.closest('.color-popover').querySelector('.hex-input');
+      if (document.activeElement !== hexInput) hexInput.value = hex.replace('#','').toUpperCase();
+      renderRowsHeader(); draw();
+    }
+    updateFromEvent(e);
+    function onMove(ev){ updateFromEvent(ev); }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+  seriesListEl.addEventListener('input', (e) => {
+    const i = +e.target.dataset.i;
+    if (e.target.classList.contains('slabel')) {
+      series[i].label = e.target.value;
+      renderRowsHeader(); draw();
+    } else if (e.target.classList.contains('hue-range')) {
+      const h = +e.target.value;
+      hueCache[i] = h;
+      const hsv = hexToHsv(series[i].color);
+      const hex = hsvToHex(h, hsv.s, hsv.v);
+      applySeriesColor(i, hex);
+      const pop = e.target.closest('.color-popover');
+      drawSVCanvas(pop.querySelector('.sv-canvas'), h, hsv.s, hsv.v);
+      pop.querySelector('.hex-input').value = hex.replace('#','').toUpperCase();
+      renderRowsHeader(); draw();
+    } else if (e.target.classList.contains('hex-input')) {
+      const raw = e.target.value.replace('#','').trim();
+      if (/^[0-9a-fA-F]{6}$/.test(raw)) {
+        const hex = '#' + raw;
+        hueCache[i] = hexToHsv(hex).h;
+        applySeriesColor(i, hex);
+        const pop = e.target.closest('.color-popover');
+        const hsv = hexToHsv(hex);
+        drawSVCanvas(pop.querySelector('.sv-canvas'), hsv.h, hsv.s, hsv.v);
+        pop.querySelector('.hue-range').value = Math.round(hsv.h);
+        renderRowsHeader(); draw();
+      }
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.color-swatch-wrap')) closeAllPopovers();
+  });
+  document.getElementById('addSeries').addEventListener('click', () => {
+    if (series.length >= MAX_SERIES) return;
+    const idx = series.length;
+    series.push({ label: '', color: PALETTE[idx % PALETTE.length] });
+    rowsData.forEach(r => r.vals.push(''));
+    renderSeriesList(); renderRowsHeader(); renderRows(); draw();
+  });
+  // ---- controls: rows ----
+  const rowsEl = document.getElementById('rows');
+  function renderRowsHeader(){
+    const el = document.getElementById('rowsHeader');
+    let html = `<span class="wk-h">계열</span>`;
+    series.forEach((s,i) => {
+      html += `<span class="v-h" style="color:${s.color}">${esc((s.label && s.label.trim()) || ('계열 '+(i+1)))}</span>`;
+    });
+    html += `<span class="row-del-spacer"></span>`;
+    el.innerHTML = html;
+  }
+  function renderRows(){
+    rowsEl.innerHTML = '';
+    rowsData.forEach((r, i) => {
+      const div = document.createElement('div');
+      div.className = 'row-item';
+      const valsHtml = r.vals.map((v,j) => `<input type="text" class="vv" data-i="${i}" data-j="${j}" value="${esc(v)}">`).join('');
+      const delBtn = rowsData.length > 1
+        ? `<button class="sqbtn danger del" data-i="${i}" title="이 행 삭제">×</button>`
+        : `<span class="row-del-spacer"></span>`;
+      div.innerHTML = `<input type="text" class="wk" data-i="${i}" placeholder="축 ${i+1}" value="${esc(r.wk)}">${valsHtml}${delBtn}`;
+      rowsEl.appendChild(div);
+    });
+  }
+  function getCellInput(colIdx, rowIdx){
+    const row = rowsEl.children[rowIdx];
+    if (!row) return null;
+    if (colIdx === 0) return row.querySelector('.wk');
+    return row.querySelector(`.vv[data-j="${colIdx - 1}"]`);
+  }
+  rowsEl.addEventListener('input', (e) => {
+    const i = +e.target.dataset.i;
+    if (e.target.classList.contains('wk')) rowsData[i].wk = e.target.value;
+    else if (e.target.classList.contains('vv')) {
+      const j = +e.target.dataset.j;
+      rowsData[i].vals[j] = e.target.value;
+    }
+    draw();
+  });
+  rowsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn && btn.classList.contains('del') && rowsData.length > 1) {
+      rowsData.splice(+btn.dataset.i, 1);
+      renderRows(); draw();
+    }
+  });
+  rowsEl.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const target = e.target;
+    const isWk = target.classList && target.classList.contains('wk');
+    const isVv = target.classList && target.classList.contains('vv');
+    if (!isWk && !isVv) return;
+    const rowIdx = +target.dataset.i;
+    const colIdx = isWk ? 0 : (+target.dataset.j + 1);
+    const totalCols = 1 + series.length;
+    const totalRows = rowsData.length;
+    let nextRow = rowIdx, nextCol = colIdx;
+    if (!e.shiftKey) {
+      nextRow = rowIdx + 1;
+      if (nextRow >= totalRows) { nextRow = 0; nextCol = colIdx + 1; }
+      if (nextCol >= totalCols) return;
+    } else {
+      nextRow = rowIdx - 1;
+      if (nextRow < 0) { nextRow = totalRows - 1; nextCol = colIdx - 1; }
+      if (nextCol < 0) return;
+    }
+    const nextInput = getCellInput(nextCol, nextRow);
+    if (nextInput) {
+      e.preventDefault();
+      nextInput.focus();
+      if (nextInput.select) nextInput.select();
+    }
+  });
+  document.getElementById('addRow').addEventListener('click', () => {
+    rowsData.push({ wk: '', vals: series.map(() => '') });
+    renderRows(); draw();
+  });
+  document.getElementById('flipAxis').addEventListener('click', () => {
+    if (rowsData.length === 0 || series.length === 0) return;
+    const newSeries = rowsData.map((r,i) => ({ label: r.wk, color: PALETTE[i % PALETTE.length] })).slice(0, MAX_SERIES);
+    const newRows = series.map((s,j) => ({ wk: s.label, vals: rowsData.slice(0, MAX_SERIES).map(r => r.vals[j]) }));
+    series = newSeries;
+    rowsData.length = 0;
+    newRows.forEach(r => rowsData.push(r));
+    renderSeriesList(); renderRowsHeader(); renderRows(); draw();
+  });
+  renderSeriesList(); renderRowsHeader(); renderRows();
+  // ---- guide box toggle ----
+  const guideToggle = document.getElementById('guideToggle');
+  const guideBox = document.getElementById('guideBox');
+  guideToggle.addEventListener('click', () => {
+    const willOpen = guideBox.classList.contains('hidden');
+    guideBox.classList.toggle('hidden', !willOpen);
+    guideToggle.classList.toggle('open', willOpen);
+    guideToggle.querySelector('.label').textContent = willOpen ? '사용법 닫기' : '사용법 보기';
+  });
+  // ---- mode / chart type toggles ----
+  document.querySelectorAll('#modeSeg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', b === btn));
+      draw();
+    });
+  });
+  document.querySelectorAll('#chartTypeSeg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      chartType = btn.dataset.type;
+      document.querySelectorAll('#chartTypeSeg button').forEach(b => b.classList.toggle('active', b === btn));
+      draw();
+    });
+  });
+  document.getElementById('app').addEventListener('change', (e) => {
+    if (e.target.id === 'useLogo' || e.target.id === 'hideValueLabels' || e.target.id === 'hideLegend') draw();
+  });
+  ['title','highlight','subtitle','footer','brand'].forEach(id => {
+    document.getElementById(id).addEventListener('input', draw);
+  });
+  // Explicitly guarantee Shift+Enter inserts a line break in "내용" — plain
+  // Enter already does this in a <textarea> by default, but we handle
+  // Shift+Enter ourselves so it's reliable regardless of host environment.
+  document.getElementById('footer').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      const ta = e.target;
+      const start = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, start) + '\n' + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = start + 1;
+      draw();
+    }
+  });
+  // ---- watermark: exact Wikitree wordmark as vector path (auto-recolors per mode) ----
+  const LOGO_PATH_D = "M112.81,0 L224.01,241.56 L335.19,0 L112.81,0 Z M0,8.04 L107.48,241.56 L122.45,209.06 L29.93,8.04 L0,8.04 Z M41.31,8.04 L128.14,196.7 L141.25,168.21 L67.52,8.04 L41.31,8.04 Z M105.13,8.04 L78.91,8.04 L146.95,155.84 L160.06,127.36 L105.13,8.04 Z M824.44,146.15 L824.44,129.03 L728.56,129.03 L728.56,101.38 L820.96,101.38 L820.96,84.26 L728.56,84.26 L728.56,57.45 L822.3,57.45 L822.3,40.34 L728.56,40.34 L706.97,40.34 L706.97,57.45 L706.97,84.26 L706.97,101.38 L706.97,129.03 L706.97,146.15 L728.56,146.15 L824.44,146.15 Z M978.41,36.84 L978.41,148.29 L885.24,148.29 L885.24,109.63 L924.74,109.63 L946.3,109.63 L946.3,92.52 L946.3,57.45 L946.3,40.34 L924.74,40.34 L865.56,40.34 L865.56,57.45 L924.74,57.45 L924.74,92.52 L863.83,92.52 L863.83,92.92 L863.65,92.92 L863.65,165.39 L863.83,165.39 L885.24,165.39 L978.41,165.39 L978.41,206.45 L1000,206.45 L1000,36.84 L978.41,36.84 Z M467.65,138.66 L342.77,138.66 L342.77,155.78 L386.9,155.78 L386.9,205.57 L408.15,205.57 L408.15,155.78 L467.65,155.78 L467.65,206.45 L489.23,206.45 L489.23,36.84 L467.65,36.84 L467.65,138.66 Z M689.04,174.86 L840.55,174.86 L840.55,191.98000000000002 L689.04,191.98000000000002 Z M637.66,36.84 L659.25,36.84 L659.25,206.44 L637.66,206.44 Z M599.28,40.34h-75.79v17.11h60.02c.2,2.49.33,4.93.33,7.1,0,8.43-1,16.28-2.73,23.65h-56.76v17.13h51.04c-11.88,26.42-34.7,43.93-58.17,52.22l11.25,14.15c46.1-16.04,79.2-59.85,79.2-111.42,0-6.21-.5-14.01-1.42-19.94h-6.96Z M397.79,126.78c28.04,0,50.74-20.52,50.74-45.83s-22.7-45.84-50.74-45.84-50.76,20.53-50.76,45.84,22.74,45.83,50.76,45.83ZM397.79,51.67c16.34,0,29.57,13.12,29.57,29.28s-13.23,29.28-29.57,29.28-29.58-13.12-29.58-29.28,13.24-29.28,29.58-29.28Z";
+  const LOGO_VB_W = 1000, LOGO_VB_H = 241.56;
+  let logoPath = null;
+  try { logoPath = new Path2D(LOGO_PATH_D); } catch(e) { logoPath = null; }
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  function val(id){ return document.getElementById(id).value; }
+  const LEGEND_GAP = 44, SWATCH_W = 46, SWATCH_TEXT_GAP = 14, LEGEND_LINE_H = 50;
+  function buildLegendLayout(seriesList, maxWidth){
+    ctx.font = '600 27px "Noto Sans KR", sans-serif';
+    const entries = seriesList.map((s,i) => {
+      const label = (s.label && s.label.trim()) ? s.label : '';
+      const labelW = label ? ctx.measureText(label).width : 0;
+      return { index:i, label, width: SWATCH_W + (label ? SWATCH_TEXT_GAP + labelW : 0) };
+    });
+    const rows = [];
+    let row = [], rowW = 0;
+    entries.forEach(e => {
+      const addW = row.length ? LEGEND_GAP + e.width : e.width;
+      if (rowW + addW > maxWidth && row.length) {
+        rows.push({ items: row, width: rowW });
+        row = []; rowW = 0;
+      }
+      row.push(e);
+      rowW += row.length > 1 ? LEGEND_GAP + e.width : e.width;
+    });
+    if (row.length) rows.push({ items: row, width: rowW });
+    return rows;
+  }
+  function niceStep(range){
+    if (!isFinite(range) || range <= 0) return 10;
+    const raw = range / 5;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    let step;
+    if (norm < 1.5) step = 1;
+    else if (norm < 3) step = 2;
+    else if (norm < 7) step = 5;
+    else step = 10;
+    return step * mag;
+  }
+  function seriesColorOf(j){ return adjustForMode(series[j].color, mode); }
+  function fitFontSize(text, maxWidth, base, min, weight){
+    let size = base;
+    while (size > min) {
+      ctx.font = `${weight} ${size}px "Noto Sans KR", sans-serif`;
+      if (ctx.measureText(text).width <= maxWidth) return { size, text };
+      size -= 1;
+    }
+    ctx.font = `${weight} ${min}px "Noto Sans KR", sans-serif`;
+    let t = text;
+    while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) t = t.slice(0, -1);
+    return { size: min, text: t.length < text.length ? t + '…' : text };
+  }
+  function wrapLine(text, maxWidth){
+    if (!text) return [''];
+    const lines = [];
+    let cur = '';
+    for (const ch of text) {
+      const test = cur + ch;
+      if (cur.length > 0 && ctx.measureText(test).width > maxWidth) {
+        lines.push(cur);
+        cur = ch;
+      } else {
+        cur = test;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  }
+  function drawPieChart(theme, plotLeft, plotRight, plotTop, plotBottom){
+    const cx = (plotLeft + plotRight) / 2;
+    const cy = (plotTop + plotBottom) / 2;
+    const radius = Math.max(30, Math.min(plotRight - plotLeft, plotBottom - plotTop) / 2 - 10);
+    const sums = series.map((s,j) => {
+      const vals = rowsData.map(r => r.vals[j]).filter(v => !isBlank(v)).map(numVal);
+      return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+    });
+    const total = sums.reduce((a,b) => a + Math.max(b,0), 0);
+    if (total <= 0) {
+      ctx.textAlign = 'center';
+      ctx.font = '500 27px "Noto Sans KR", sans-serif';
+      ctx.fillStyle = theme.axisText;
+      ctx.fillText('데이터를 입력하면 파이 차트가 표시됩니다', cx, cy);
+      return;
+    }
+    let startAngle = -Math.PI/2;
+    series.forEach((s,j) => {
+      const v = Math.max(sums[j], 0);
+      const frac = v / total;
+      const angle = frac * Math.PI * 2;
+      if (angle <= 0) return;
+      const color = seriesColorOf(j);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, startAngle, startAngle + angle);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = theme.bg; ctx.lineWidth = 3; ctx.stroke();
+      if (frac > 0.03) {
+        const midAngle = startAngle + angle/2;
+        const lx = cx + Math.cos(midAngle) * (radius*0.62);
+        const ly = cy + Math.sin(midAngle) * (radius*0.62);
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.font = '800 27px "Noto Sans KR", sans-serif';
+        ctx.fillText((frac*100).toFixed(1) + '%', lx, ly);
+      }
+      startAngle += angle;
+    });
+  }
+  function draw(){
+    const theme = THEME[mode];
+    const title = val('title'), highlight = val('highlight'), subtitle = val('subtitle');
+    const rawFooterLines = val('footer').split(/\r\n|\r|\n/);
+    const footerLines = rawFooterLines.filter(l => l.trim() !== '');
+    const brand = val('brand');
+    const useLogo = document.getElementById('useLogo').checked;
+    const hideValueLabels = document.getElementById('hideValueLabels').checked;
+    const hideLegend = document.getElementById('hideLegend').checked;
+    ctx.fillStyle = theme.bg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    const hasTitle = !!(title && title.trim());
+    const hasHighlight = !!(highlight && highlight.trim());
+    const hasSubtitleText = !!(subtitle && subtitle.trim());
+    const maxTitleWidth = W - 112;
+    const BASE_SIZE = 55, MIN_SIZE = 31, GAP = 18;
+    let titleSize = BASE_SIZE, highlightSize = BASE_SIZE, twoLine = false;
+    if (hasTitle && hasHighlight) {
+      ctx.font = `900 ${BASE_SIZE}px "Noto Sans KR", sans-serif`;
+      let tw = ctx.measureText(title).width, hw = ctx.measureText(highlight).width;
+      if (tw + GAP + hw > maxTitleWidth) {
+        let size = BASE_SIZE, fits = false;
+        while (size > MIN_SIZE) {
+          size -= 1;
+          ctx.font = `900 ${size}px "Noto Sans KR", sans-serif`;
+          if (ctx.measureText(title).width + GAP + ctx.measureText(highlight).width <= maxTitleWidth) { fits = true; break; }
+        }
+        if (fits) { titleSize = highlightSize = size; }
+        else { twoLine = true; }
+      }
+    }
+    let titleText = title, highlightText = highlight;
+    if (twoLine) {
+      const r1 = fitFontSize(title, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
+      const r2 = fitFontSize(highlight, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
+      titleSize = r1.size; titleText = r1.text;
+      highlightSize = r2.size; highlightText = r2.text;
+    } else if (hasTitle && !hasHighlight) {
+      const r = fitFontSize(title, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
+      titleSize = r.size; titleText = r.text;
+    } else if (!hasTitle && hasHighlight) {
+      const r = fitFontSize(highlight, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
+      highlightSize = r.size; highlightText = r.text;
+    }
+    // ---- dynamic vertical layout: shrinks margins when title/highlight/subtitle are empty ----
+    const TOP = 56;
+    const titleBaselineY = TOP + 40;
+    let extraLineOffset = 0;
+    let afterTitleY = TOP;
+    if (hasTitle || hasHighlight) {
+      if (!twoLine) {
+        let tx = 56;
+        if (hasTitle) {
+          ctx.font = `900 ${titleSize}px "Noto Sans KR", sans-serif`;
+          ctx.fillStyle = theme.text;
+          ctx.fillText(titleText, tx, titleBaselineY);
+          tx += ctx.measureText(titleText).width + GAP;
+        }
+        if (hasHighlight) {
+          ctx.font = `900 ${highlightSize}px "Noto Sans KR", sans-serif`;
+          ctx.fillStyle = theme.accent;
+          ctx.fillText(highlightText, tx, titleBaselineY);
+        }
+        afterTitleY = titleBaselineY + 18;
+      } else {
+        if (hasTitle) {
+          ctx.font = `900 ${titleSize}px "Noto Sans KR", sans-serif`;
+          ctx.fillStyle = theme.text;
+          ctx.fillText(titleText, 56, titleBaselineY);
+        }
+        const secondLineY = titleBaselineY + Math.round(Math.max(titleSize, highlightSize) * 0.92) + 8;
+        if (hasHighlight) {
+          ctx.font = `900 ${highlightSize}px "Noto Sans KR", sans-serif`;
+          ctx.fillStyle = theme.accent;
+          ctx.fillText(highlightText, 56, secondLineY);
+        }
+        extraLineOffset = secondLineY - titleBaselineY;
+        afterTitleY = secondLineY + 18;
+      }
+    }
+    let afterSubtitleY = afterTitleY;
+    if (hasSubtitleText) {
+      const gapAboveSubtitle = (hasTitle || hasHighlight) ? 48 : 28;
+      const subtitleY = afterTitleY + gapAboveSubtitle;
+      const subMaxWidth = W - 112;
+      const subFit = fitFontSize(subtitle, subMaxWidth, 29, 19, 500);
+      ctx.font = `500 ${subFit.size}px "Noto Sans KR", sans-serif`;
+      ctx.fillStyle = theme.sub;
+      ctx.fillText(subFit.text, 56, subtitleY);
+      afterSubtitleY = subtitleY + 14;
+    }
+    const hasAnyHeader = hasTitle || hasHighlight || hasSubtitleText;
+    const legendStartY = afterSubtitleY + (hasAnyHeader ? 48 : 24);
+    const plotLeft = 100, plotRight = W - 60;
+    const legendRows = hideLegend ? [] : buildLegendLayout(series, plotRight - plotLeft);
+    if (!hideLegend) {
+      ctx.font = '600 27px "Noto Sans KR", sans-serif';
+      legendRows.forEach((rowObj, rIdx) => {
+        let x = plotLeft + (plotRight - plotLeft - rowObj.width) / 2;
+        const y = legendStartY + rIdx * LEGEND_LINE_H;
+        rowObj.items.forEach((item) => {
+          const s = series[item.index];
+          const color = adjustForMode(s.color, mode);
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 46, y);
+          ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.stroke();
+          ctx.beginPath(); ctx.arc(x + 23, y, 8, 0, Math.PI*2);
+          ctx.fillStyle = theme.dot; ctx.fill();
+          ctx.strokeStyle = color; ctx.lineWidth = 3.5; ctx.stroke();
+          if (item.label) {
+            ctx.fillStyle = theme.text;
+            ctx.fillText(item.label, x + 60, y + 9);
+          }
+          x += item.width + LEGEND_GAP;
+        });
+      });
+    }
+    const plotTop = legendStartY + legendRows.length * LEGEND_LINE_H + (legendRows.length ? 22 : 0);
+    ctx.font = '400 23px "Noto Sans KR", sans-serif';
+    const footerMaxWidth = Math.max(80, plotRight - 56);
+    let wrappedFooterLines = [];
+    footerLines.forEach(line => { wrappedFooterLines = wrappedFooterLines.concat(wrapLine(line, footerMaxWidth)); });
+    const footerBlockH = wrappedFooterLines.length ? (12 + wrappedFooterLines.length * 32) : 0;
+    const bottomPad = 96;
+    const divY = H - bottomPad - footerBlockH;
+    const plotBottom = divY - 64;
+    const n = rowsData.length;
+    if (n === 0 || series.length === 0) return;
+    if (chartType === 'pie') {
+      drawPieChart(theme, plotLeft, plotRight, plotTop, plotBottom);
+    } else {
+      const allVals = [];
+      rowsData.forEach(r => r.vals.forEach(v => { if (!isBlank(v)) allVals.push(numVal(v)); }));
+      let axMin, axMax, step;
+      if (allVals.length === 0) {
+        axMin = 0; axMax = 100; step = 20;
+      } else {
+        let minV = Math.min(...allVals), maxV = Math.max(...allVals);
+        if (chartType === 'bar') { minV = Math.min(minV, 0); maxV = Math.max(maxV, 0); }
+        const range = Math.max(maxV - minV, 1);
+        step = niceStep(range);
+        axMin = Math.floor(minV/step)*step - (chartType==='bar' ? 0 : step);
+        axMax = Math.ceil(maxV/step)*step + step;
+        if (chartType === 'bar') axMin = Math.min(axMin, 0);
+        if (axMin === axMax) axMax = axMin + step*2;
+      }
+      function xAt(i){ return n === 1 ? (plotLeft+plotRight)/2 : plotLeft + (plotRight - plotLeft) * (i / (n - 1)); }
+      function yAt(v){ return plotBottom - (v - axMin) / (axMax - axMin) * (plotBottom - plotTop); }
+      ctx.font = '500 25px "Noto Sans KR", sans-serif';
+      ctx.fillStyle = theme.axisText;
+      ctx.textAlign = 'right';
+      ctx.setLineDash([4, 5]);
+      for (let g = axMin; g <= axMax + 1e-6; g += step) {
+        const gy = yAt(g);
+        ctx.strokeStyle = theme.grid;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(plotLeft, gy); ctx.lineTo(plotRight, gy); ctx.stroke();
+        const label = formatAxisLabel(g, step);
+        ctx.fillText(label, plotLeft - 16, gy + 8);
+      }
+      ctx.setLineDash([]);
+      ctx.textAlign = 'left';
+      ctx.strokeStyle = theme.baseline;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(plotLeft, plotBottom); ctx.lineTo(plotRight, plotBottom); ctx.stroke();
+      // x-axis category labels only show when the corresponding "축" input
+      // actually has text — no fallback text is ever baked into the chart.
+      ctx.font = '500 25px "Noto Sans KR", sans-serif';
+      ctx.fillStyle = theme.axisText;
+      rowsData.forEach((r, i) => {
+        if (!r.wk) return;
+        const x = xAt(i);
+        if (n > 1 && i === 0) ctx.textAlign = 'left';
+        else if (n > 1 && i === n - 1) ctx.textAlign = 'right';
+        else ctx.textAlign = 'center';
+        ctx.fillText(r.wk, x, plotBottom + 44);
+      });
+      ctx.textAlign = 'left';
+      if (chartType === 'bar') {
+        const groupW = (plotRight - plotLeft) / n;
+        const groupPad = groupW * 0.16;
+        const barsAreaW = groupW - groupPad*2;
+        const gap = series.length > 1 ? barsAreaW * 0.06 : 0;
+        const barW = (barsAreaW - gap*(series.length-1)) / series.length;
+        rowsData.forEach((r, i) => {
+          const gx = plotLeft + i*groupW + groupPad;
+          series.forEach((s, j) => {
+            const raw = r.vals[j];
+            if (isBlank(raw)) return;
+            const v = numVal(raw);
+            const y0 = yAt(0), y1 = yAt(v);
+            const top = Math.min(y0,y1), h = Math.max(2, Math.abs(y1-y0));
+            const bx = gx + j*(barW+gap);
+            ctx.fillStyle = seriesColorOf(j);
+            ctx.fillRect(bx, top, barW, h);
+            if (!hideValueLabels) {
+              ctx.font = '700 21px "Noto Sans KR", sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText(formatNum(v), bx + barW/2, v >= 0 ? top - 10 : top + h + 26);
+            }
+          });
+        });
+      } else {
+        series.forEach((s, j) => {
+          const color = seriesColorOf(j);
+          ctx.beginPath();
+          let started = false;
+          rowsData.forEach((r, i) => {
+            const raw = r.vals[j];
+            if (isBlank(raw)) { started = false; return; }
+            const x = xAt(i), y = yAt(numVal(raw));
+            if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+          });
+          ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke();
+          rowsData.forEach((r, i) => {
+            const raw = r.vals[j];
+            if (isBlank(raw)) return;
+            const x = xAt(i), y = yAt(numVal(raw));
+            ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2);
+            ctx.fillStyle = theme.dot; ctx.fill();
+            ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.stroke();
+          });
+        });
+        if (!hideValueLabels) {
+          ctx.font = '800 29px "Noto Sans KR", sans-serif';
+          const LABEL_GAP = 40;
+          rowsData.forEach((r, i) => {
+            const x = xAt(i);
+            const present = series.map((s,j) => ({ j, v: r.vals[j] })).filter(o => !isBlank(o.v));
+            if (!present.length) return;
+            const nums = present.map(o => numVal(o.v));
+            const mean = nums.reduce((a,b) => a+b, 0) / nums.length;
+            let items = present.map((o, idx) => {
+              const py = yAt(nums[idx]);
+              const above = nums[idx] >= mean;
+              return { j: o.j, v: nums[idx], natural: above ? py - 26 : py + 44 };
+            });
+            items.sort((a,b) => a.natural - b.natural);
+            items.forEach((it, idx) => {
+              it.ly = idx === 0 ? it.natural : Math.max(it.natural, items[idx-1].ly + LABEL_GAP);
+            });
+            items.forEach(it => {
+              if (it.ly < plotTop + 16) it.ly = plotTop + 16;
+              if (it.ly > plotBottom + 60) it.ly = plotBottom + 60;
+            });
+            let lx = x;
+            if (n > 1 && i === 0) { ctx.textAlign = 'left'; lx = x + 10; }
+            else if (n > 1 && i === n - 1) { ctx.textAlign = 'right'; lx = x - 10; }
+            else { ctx.textAlign = 'center'; }
+            const total = items.length;
+            items.forEach((it, idx) => {
+              const offsetX = total > 1 ? (idx - (total - 1) / 2) * 14 : 0;
+              ctx.fillStyle = seriesColorOf(it.j);
+              ctx.fillText(formatNum(it.v), lx + offsetX, it.ly);
+            });
+          });
+          ctx.textAlign = 'left';
+        }
+      }
+    }
+    ctx.strokeStyle = theme.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(56, divY); ctx.lineTo(plotRight, divY); ctx.stroke();
+    ctx.textAlign = 'left';
+    ctx.font = '400 23px "Noto Sans KR", sans-serif';
+    ctx.fillStyle = theme.footer;
+    wrappedFooterLines.forEach((line, i) => { ctx.fillText(line, 56, divY + 40 + i * 32); });
+    if (useLogo && logoPath) {
+      const targetH = 40;
+      const scale = targetH / LOGO_VB_H;
+      const targetW = LOGO_VB_W * scale;
+      ctx.save();
+      ctx.translate(plotRight - targetW, (H - 36) - targetH);
+      ctx.scale(scale, scale);
+      ctx.fillStyle = theme.logo;
+      ctx.fill(logoPath);
+      ctx.restore();
+    } else if (!useLogo && brand && brand.trim()) {
+      ctx.textAlign = 'right';
+      ctx.font = '900 35px "Noto Sans KR", sans-serif';
+      ctx.fillStyle = theme.accent;
+      ctx.fillText(brand, plotRight, H - 44);
+      ctx.textAlign = 'left';
+    }
+  }
+  // PNG download: build a Blob + object URL (more reliably downloadable in
+  // sandboxed/embedded contexts than a giant data: URI), attach the anchor
+  // to the DOM before clicking, and fall back to opening the image in a new
+  // tab (so it can be saved manually) if anything about the download path fails.
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const hint = document.getElementById('dlHint');
+    hint.textContent = '';
+    function openInNewTabFallback(){
+      try {
+        const dataUrl = cv.toDataURL('image/png');
+        const w = window.open(dataUrl, '_blank');
+        if (!w) hint.textContent = '팝업이 차단되었어요. 브라우저의 팝업 차단을 해제한 뒤 다시 시도해 주세요.';
+        else hint.textContent = '새 탭에서 이미지가 열렸어요. 이미지를 오른쪽 클릭해 "이미지 저장"을 눌러주세요.';
+      } catch (err) {
+        hint.textContent = '저장에 실패했어요: ' + err.message;
+      }
+    }
+    try {
+      if (cv.toBlob) {
+        cv.toBlob((blob) => {
+          if (!blob) { openInNewTabFallback(); return; }
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'approval_chart.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }, 'image/png');
+      } else {
+        openInNewTabFallback();
+      }
+    } catch (err) {
+      openInNewTabFallback();
+    }
+  });
+  draw();
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(draw); }
+  setTimeout(draw, 300);
+})();
+</script>
+</body>
+</html>
