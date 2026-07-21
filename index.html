@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>위키트리 데이터 시각화 도구</title>
-<link rel="icon" type="image/png" sizes="32x32" href="./icons_32_y.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./icons_16_y.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./icons_180_y.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
@@ -134,9 +125,9 @@
   }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 </style>
-</head>
-<body>
-<h2 class="sr-only">위키트리 데이터 시각화 도구. 국정수행 평가 스타일의 편집 가능한 여론조사 차트 생성기입니다. 패널 상단에는 도구 이름과, 눌러서 펼치고 접을 수 있는 사용법 안내 상자가 있습니다. 숫자를 12,345처럼 쉼표(천 단위 구분 기호)를 넣어 입력해도 실제 값(12345)으로 정확히 계산되고, 차트에 표시되는 숫자와 세로축 눈금에도 천 단위 구분 쉼표가 그대로 표시됩니다. 값이 정수일 때는 소수점 이하 .0이 표시되지 않고, 소수점이 있는 값일 때만 소수 첫째 자리까지 표시됩니다. 라벨(숫자) 숨기기 체크박스로 데이터 값 라벨을 켜고 끌 수 있고, 가로축 항목 이름은 입력한 경우에만 자동으로 표시됩니다. 범례 전체를 숨기는 체크박스도 별도로 있습니다. 결과물은 PNG로 저장할 수 있으며, 저장 버튼은 패널 하단에 항상 고정되어 있습니다. 내용 입력칸의 줄바꿈(Enter, Shift+Enter)이 결과물에도 정확히 그대로 반영됩니다. 범례 이름과 축 라벨을 비워두면 실제 결과물에는 아무 글자도 표시되지 않고, 입력했을 때만 해당 텍스트가 나타납니다. 라이트 모드에서는 강조 텍스트와 구분선, 워터마크 대체 텍스트가 밝은 배경에서도 잘 보이도록 다크골드 계열 색상을 사용하고, 다크 모드에서는 밝은 골드를 그대로 사용합니다. 데이터 입력 영역에서는 Tab 키를 누르면 좌우가 아니라 같은 열을 따라 위에서 아래로 이동합니다. 색상 피커는 팔레트 탭과, 채도/명도 캔버스 및 색조 슬라이더로 구성된 직접 선택 탭을 제공합니다. 선택된 차트 종류와 모드가 색상으로 뚜렷하게 구분되며, 제목/강조/부제가 비어 있을 때 상단 여백이 자동으로 줄어듭니다. 선형/막대/파이 차트 종류, 다크/라이트 모드, 계열 순서 변경과 축 뒤집기, 최대 10개 계열, 데이터 입력, 내용 및 워터마크 설정을 지원하며 오른쪽에 실시간으로 그래프가 그려집니다.</h2>
+
+<h2 class="sr-only">위키트리 데이터 시각화 도구. 국정수행 평가 스타일의 편집 가능한 여론조사 차트 생성기입니다. 실제 데이터에 음수가 없는데도 세로축에 불필요한 0이나 음수 눈금이 강제로 표시되지 않습니다. 세로축 눈금 라벨이 만 단위 이상으로 길어지면 왼쪽 여백이 자동으로 넓어져서 숫자가 잘리거나 겹치지 않습니다. 숫자를 12,345처럼 쉼표(천 단위 구분 기호)를 넣어 입력해도 실제 값(12345)으로 정확히 계산되고, 차트에 표시되는 숫자와 세로축 눈금에도 천 단위 구분 쉼표가 그대로 표시됩니다. 값이 정수일 때는 소수점 이하 .0이 표시되지 않고, 소수점이 있는 값일 때만 소수 첫째 자리까지 표시됩니다. 라벨(숫자) 숨기기 체크박스로 데이터 값 라벨을 켜고 끌 수 있고, 가로축 항목 이름은 입력한 경우에만 자동으로 표시됩니다. 범례 전체를 숨기는 체크박스도 별도로 있습니다. 제목은 제목(앞), 강조 텍스트, 제목(뒤) 세 칸으로 나누어 입력할 수 있어, 예를 들어 "이재명 대통령" + "지지율 변화" + "역대 추이"처럼 문장 중간에 강조 색상 텍스트가 들어가고 그 뒤에 다시 일반 제목 텍스트가 이어지는 형태를 만들 수 있습니다. 결과물은 PNG로 저장할 수 있으며, 저장 버튼은 패널 하단에 항상 고정되어 있습니다. 내용 입력칸의 줄바꿈(Enter, Shift+Enter)이 결과물에도 정확히 그대로 반영됩니다. 범례 이름과 축 라벨을 비워두면 실제 결과물에는 아무 글자도 표시되지 않고, 입력했을 때만 해당 텍스트가 나타납니다. 라이트 모드에서는 강조 텍스트와 구분선, 워터마크 대체 텍스트가 밝은 배경에서도 잘 보이도록 다크골드 계열 색상을 사용하고, 다크 모드에서는 밝은 골드를 그대로 사용합니다. 데이터 입력 영역에서는 Tab 키를 누르면 좌우가 아니라 같은 열을 따라 위에서 아래로 이동합니다. 색상 피커는 팔레트 탭과, 채도/명도 캔버스 및 색조 슬라이더로 구성된 직접 선택 탭을 제공합니다. 선택된 차트 종류와 모드가 색상으로 뚜렷하게 구분되며, 제목/강조/부제가 비어 있을 때 상단 여백이 자동으로 줄어듭니다. 선형/막대/파이 차트 종류, 다크/라이트 모드, 계열 순서 변경과 축 뒤집기, 최대 10개 계열, 데이터 입력, 내용 및 워터마크 설정을 지원하며 오른쪽에 실시간으로 그래프가 그려집니다.</h2>
+
 <div class="app-wrap" id="app">
   <div class="panel">
     <div class="panel-header">
@@ -148,11 +139,12 @@
         <ol>
           <li>위에서 <strong>차트 종류</strong>(선/막대/파이)와 <strong>모드</strong>(다크/라이트)를 선택하세요.</li>
           <li><strong>범례/색상</strong>에서 계열 이름과 색상을 정하고, <strong>데이터</strong>에서 값을 입력하세요. 숫자는 1,234처럼 쉼표를 넣어도 그대로 인식돼요.</li>
-          <li>필요하면 <strong>제목·내용·워터마크</strong>를 채워 넣으세요. 비워두면 결과물에는 표시되지 않아요.</li>
+          <li>필요하면 <strong>제목·내용·워터마크</strong>를 채워 넣으세요. 제목은 앞/강조/뒤 세 칸으로 나뉘어 있어, 강조 텍스트가 문장 중간에 들어가는 형태도 만들 수 있어요. 비워두면 결과물에는 표시되지 않아요.</li>
           <li>완성되면 아래의 <strong>PNG로 저장</strong> 버튼을 눌러 다운로드하세요.</li>
         </ol>
       </div>
     </div>
+
     <div class="panel-scroll">
       <h3>차트 종류</h3>
       <div class="seg" id="chartTypeSeg">
@@ -160,18 +152,23 @@
         <button data-type="bar">막대</button>
         <button data-type="pie">파이</button>
       </div>
+
       <h3>모드</h3>
       <div class="seg" id="modeSeg">
         <button data-mode="dark" class="active">다크</button>
         <button data-mode="light">라이트</button>
       </div>
+
       <h3>제목</h3>
-      <label>제목</label>
-      <input type="text" id="title" value="" placeholder="제목을 입력하세요">
+      <label>제목 (앞)</label>
+      <input type="text" id="title" value="" placeholder="제목 앞부분을 입력하세요">
       <label>강조 텍스트</label>
       <input type="text" id="highlight" value="" placeholder="강조할 텍스트를 입력하세요">
+      <label>제목 (뒤)</label>
+      <input type="text" id="titleAfter" value="" placeholder="강조 텍스트 뒤에 이어질 텍스트를 입력하세요">
       <label>부제</label>
       <input type="text" id="subtitle" value="" placeholder="부제를 입력하세요">
+
       <h3>범례 / 색상 (최대 10개)</h3>
       <div class="chk-row">
         <input type="checkbox" id="hideLegend">
@@ -179,6 +176,7 @@
       </div>
       <div id="seriesList"></div>
       <button class="addrow-btn" id="addSeries">+ 계열 추가</button>
+
       <h3>데이터</h3>
       <div class="chk-row">
         <input type="checkbox" id="hideValueLabels">
@@ -188,6 +186,7 @@
       <div id="rows"></div>
       <button class="addrow-btn" id="addRow">+ 행 추가</button>
       <button class="addrow-btn flip" id="flipAxis">⇄ 축 뒤집기</button>
+
       <h3>내용</h3>
       <textarea id="footer" placeholder="내용을 입력하세요 (Shift+Enter로 줄바꿈)"></textarea>
       <div class="chk-row">
@@ -197,15 +196,18 @@
       <label>대체 텍스트 워터마크 (로고 미사용 시)</label>
       <input type="text" id="brand" value="">
     </div>
+
     <div class="panel-actions">
       <button class="dl-btn" id="downloadBtn">PNG로 저장</button>
       <div class="dl-hint" id="dlHint"></div>
     </div>
   </div>
+
   <div class="canvas-wrap">
     <canvas id="cv" width="1680" height="945"></canvas>
   </div>
 </div>
+
 <script>
 (function(){
   const MAX_SERIES = 10;
@@ -641,7 +643,7 @@
   document.getElementById('app').addEventListener('change', (e) => {
     if (e.target.id === 'useLogo' || e.target.id === 'hideValueLabels' || e.target.id === 'hideLegend') draw();
   });
-  ['title','highlight','subtitle','footer','brand'].forEach(id => {
+  ['title','highlight','titleAfter','subtitle','footer','brand'].forEach(id => {
     document.getElementById(id).addEventListener('input', draw);
   });
   // Explicitly guarantee Shift+Enter inserts a line break in "내용" — plain
@@ -773,7 +775,7 @@
   }
   function draw(){
     const theme = THEME[mode];
-    const title = val('title'), highlight = val('highlight'), subtitle = val('subtitle');
+    const title = val('title'), highlight = val('highlight'), titleAfter = val('titleAfter'), subtitle = val('subtitle');
     const rawFooterLines = val('footer').split(/\r\n|\r|\n/);
     const footerLines = rawFooterLines.filter(l => l.trim() !== '');
     const brand = val('brand');
@@ -786,76 +788,67 @@
     ctx.textAlign = 'left';
     const hasTitle = !!(title && title.trim());
     const hasHighlight = !!(highlight && highlight.trim());
+    const hasTitleAfter = !!(titleAfter && titleAfter.trim());
     const hasSubtitleText = !!(subtitle && subtitle.trim());
     const maxTitleWidth = W - 112;
     const BASE_SIZE = 55, MIN_SIZE = 31, GAP = 18;
-    let titleSize = BASE_SIZE, highlightSize = BASE_SIZE, twoLine = false;
-    if (hasTitle && hasHighlight) {
-      ctx.font = `900 ${BASE_SIZE}px "Noto Sans KR", sans-serif`;
-      let tw = ctx.measureText(title).width, hw = ctx.measureText(highlight).width;
-      if (tw + GAP + hw > maxTitleWidth) {
-        let size = BASE_SIZE, fits = false;
-        while (size > MIN_SIZE) {
-          size -= 1;
-          ctx.font = `900 ${size}px "Noto Sans KR", sans-serif`;
-          if (ctx.measureText(title).width + GAP + ctx.measureText(highlight).width <= maxTitleWidth) { fits = true; break; }
-        }
-        if (fits) { titleSize = highlightSize = size; }
-        else { twoLine = true; }
-      }
+    // ---- title/highlight/titleAfter: rendered as an ordered run of colored
+    // segments ("제목(앞)" -> normal, "강조 텍스트" -> accent color, "제목(뒤)" ->
+    // back to normal) so a phrase like 이재명 대통령 "지지율 변화" 역대 추이 can be
+    // built from three separate inputs. Tries to fit all present segments on
+    // one line first (shrinking a shared font size), and only falls back to
+    // one segment per line if even the smallest allowed size can't fit.
+    const titleSegs = [];
+    if (hasTitle) titleSegs.push({ text: title, accent: false });
+    if (hasHighlight) titleSegs.push({ text: highlight, accent: true });
+    if (hasTitleAfter) titleSegs.push({ text: titleAfter, accent: false });
+    function segColor(accent){ return accent ? theme.accent : theme.text; }
+    function combinedSegWidth(size){
+      ctx.font = `900 ${size}px "Noto Sans KR", sans-serif`;
+      let w = 0;
+      titleSegs.forEach((s,i) => { w += ctx.measureText(s.text).width; if (i>0) w += GAP; });
+      return w;
     }
-    let titleText = title, highlightText = highlight;
-    if (twoLine) {
-      const r1 = fitFontSize(title, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
-      const r2 = fitFontSize(highlight, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
-      titleSize = r1.size; titleText = r1.text;
-      highlightSize = r2.size; highlightText = r2.text;
-    } else if (hasTitle && !hasHighlight) {
-      const r = fitFontSize(title, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
-      titleSize = r.size; titleText = r.text;
-    } else if (!hasTitle && hasHighlight) {
-      const r = fitFontSize(highlight, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
-      highlightSize = r.size; highlightText = r.text;
+    let titleLines = [];
+    if (titleSegs.length > 0) {
+      let fitSize = null;
+      for (let size = BASE_SIZE; size >= MIN_SIZE; size--) {
+        if (combinedSegWidth(size) <= maxTitleWidth) { fitSize = size; break; }
+      }
+      if (fitSize) {
+        titleLines = [{ segments: titleSegs.map(s => ({ text: s.text, color: segColor(s.accent), size: fitSize })) }];
+      } else {
+        titleLines = titleSegs.map(s => {
+          const r = fitFontSize(s.text, maxTitleWidth, BASE_SIZE, MIN_SIZE, 900);
+          return { segments: [{ text: r.text, color: segColor(s.accent), size: r.size }] };
+        });
+      }
     }
     // ---- dynamic vertical layout: shrinks margins when title/highlight/subtitle are empty ----
     const TOP = 56;
     const titleBaselineY = TOP + 40;
-    let extraLineOffset = 0;
     let afterTitleY = TOP;
-    if (hasTitle || hasHighlight) {
-      if (!twoLine) {
+    if (titleLines.length > 0) {
+      let lineY = titleBaselineY;
+      titleLines.forEach((line, li) => {
         let tx = 56;
-        if (hasTitle) {
-          ctx.font = `900 ${titleSize}px "Noto Sans KR", sans-serif`;
-          ctx.fillStyle = theme.text;
-          ctx.fillText(titleText, tx, titleBaselineY);
-          tx += ctx.measureText(titleText).width + GAP;
+        line.segments.forEach(seg => {
+          ctx.font = `900 ${seg.size}px "Noto Sans KR", sans-serif`;
+          ctx.fillStyle = seg.color;
+          ctx.fillText(seg.text, tx, lineY);
+          tx += ctx.measureText(seg.text).width + GAP;
+        });
+        if (li < titleLines.length - 1) {
+          const maxSizeInLine = Math.max(...line.segments.map(s => s.size));
+          lineY = lineY + Math.round(maxSizeInLine * 0.92) + 8;
+        } else {
+          afterTitleY = lineY + 18;
         }
-        if (hasHighlight) {
-          ctx.font = `900 ${highlightSize}px "Noto Sans KR", sans-serif`;
-          ctx.fillStyle = theme.accent;
-          ctx.fillText(highlightText, tx, titleBaselineY);
-        }
-        afterTitleY = titleBaselineY + 18;
-      } else {
-        if (hasTitle) {
-          ctx.font = `900 ${titleSize}px "Noto Sans KR", sans-serif`;
-          ctx.fillStyle = theme.text;
-          ctx.fillText(titleText, 56, titleBaselineY);
-        }
-        const secondLineY = titleBaselineY + Math.round(Math.max(titleSize, highlightSize) * 0.92) + 8;
-        if (hasHighlight) {
-          ctx.font = `900 ${highlightSize}px "Noto Sans KR", sans-serif`;
-          ctx.fillStyle = theme.accent;
-          ctx.fillText(highlightText, 56, secondLineY);
-        }
-        extraLineOffset = secondLineY - titleBaselineY;
-        afterTitleY = secondLineY + 18;
-      }
+      });
     }
     let afterSubtitleY = afterTitleY;
     if (hasSubtitleText) {
-      const gapAboveSubtitle = (hasTitle || hasHighlight) ? 48 : 28;
+      const gapAboveSubtitle = titleLines.length > 0 ? 48 : 28;
       const subtitleY = afterTitleY + gapAboveSubtitle;
       const subMaxWidth = W - 112;
       const subFit = fitFontSize(subtitle, subMaxWidth, 29, 19, 500);
@@ -864,9 +857,50 @@
       ctx.fillText(subFit.text, 56, subtitleY);
       afterSubtitleY = subtitleY + 14;
     }
-    const hasAnyHeader = hasTitle || hasHighlight || hasSubtitleText;
+    const hasAnyHeader = titleLines.length > 0 || hasSubtitleText;
     const legendStartY = afterSubtitleY + (hasAnyHeader ? 48 : 24);
-    const plotLeft = 100, plotRight = W - 60;
+
+    // ---- axis range + dynamic left margin ----
+    // Compute the value range first (for line/bar charts) so the left
+    // margin can grow to fit long tick labels (e.g. "12,345") instead of
+    // clipping/crowding them when values run into the thousands or beyond.
+    let axMin, axMax, step;
+    if (chartType !== 'pie') {
+      const allVals = [];
+      rowsData.forEach(r => r.vals.forEach(v => { if (!isBlank(v)) allVals.push(numVal(v)); }));
+      if (allVals.length === 0) {
+        axMin = 0; axMax = 100; step = 20;
+      } else {
+        let minV = Math.min(...allVals), maxV = Math.max(...allVals);
+        if (chartType === 'bar') { minV = Math.min(minV, 0); maxV = Math.max(maxV, 0); }
+        const range = Math.max(maxV - minV, 1);
+        step = niceStep(range);
+        axMin = Math.floor(minV/step)*step - (chartType==='bar' ? 0 : step);
+        axMax = Math.ceil(maxV/step)*step + step;
+        if (chartType === 'bar') {
+          axMin = Math.min(axMin, 0);
+        } else if (minV >= 0) {
+          // Don't let the line chart's below-minimum padding introduce a
+          // spurious negative axis (and the "0" gridline that comes with
+          // it) when none of the actual data is negative.
+          axMin = Math.max(axMin, 0);
+        }
+        if (axMin === axMax) axMax = axMin + step*2;
+      }
+    }
+
+    const plotRight = W - 60;
+    let plotLeft = 100;
+    if (chartType !== 'pie') {
+      ctx.font = '500 25px "Noto Sans KR", sans-serif';
+      let maxLabelW = 0;
+      for (let g = axMin; g <= axMax + 1e-6; g += step) {
+        const w = ctx.measureText(formatAxisLabel(g, step)).width;
+        if (w > maxLabelW) maxLabelW = w;
+      }
+      plotLeft = Math.max(100, Math.ceil(maxLabelW) + 36);
+    }
+
     const legendRows = hideLegend ? [] : buildLegendLayout(series, plotRight - plotLeft);
     if (!hideLegend) {
       ctx.font = '600 27px "Noto Sans KR", sans-serif';
@@ -889,6 +923,7 @@
         });
       });
     }
+
     const plotTop = legendStartY + legendRows.length * LEGEND_LINE_H + (legendRows.length ? 22 : 0);
     ctx.font = '400 23px "Noto Sans KR", sans-serif';
     const footerMaxWidth = Math.max(80, plotRight - 56);
@@ -903,21 +938,6 @@
     if (chartType === 'pie') {
       drawPieChart(theme, plotLeft, plotRight, plotTop, plotBottom);
     } else {
-      const allVals = [];
-      rowsData.forEach(r => r.vals.forEach(v => { if (!isBlank(v)) allVals.push(numVal(v)); }));
-      let axMin, axMax, step;
-      if (allVals.length === 0) {
-        axMin = 0; axMax = 100; step = 20;
-      } else {
-        let minV = Math.min(...allVals), maxV = Math.max(...allVals);
-        if (chartType === 'bar') { minV = Math.min(minV, 0); maxV = Math.max(maxV, 0); }
-        const range = Math.max(maxV - minV, 1);
-        step = niceStep(range);
-        axMin = Math.floor(minV/step)*step - (chartType==='bar' ? 0 : step);
-        axMax = Math.ceil(maxV/step)*step + step;
-        if (chartType === 'bar') axMin = Math.min(axMin, 0);
-        if (axMin === axMax) axMax = axMin + step*2;
-      }
       function xAt(i){ return n === 1 ? (plotLeft+plotRight)/2 : plotLeft + (plotRight - plotLeft) * (i / (n - 1)); }
       function yAt(v){ return plotBottom - (v - axMin) / (axMax - axMin) * (plotBottom - plotTop); }
       ctx.font = '500 25px "Noto Sans KR", sans-serif';
@@ -1099,5 +1119,3 @@
   setTimeout(draw, 300);
 })();
 </script>
-</body>
-</html>
